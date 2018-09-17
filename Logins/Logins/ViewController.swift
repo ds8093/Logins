@@ -8,6 +8,7 @@
 
 import UIKit
 import FBSDKLoginKit
+import GoogleSignIn
 
 class User {
     static func shared() -> User {
@@ -26,12 +27,13 @@ class User {
 
 
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
 
     @IBAction func loginFB(_ sender: Any) {
         print(User.shared().userFirstName)
         loginWithFacebook()
     }
+   
     
     func loginWithFacebook() {
         let loginManager = FBSDKLoginManager.init()
@@ -65,10 +67,46 @@ class ViewController: UIViewController {
         }
     }
     
+    @IBAction func loginGoogle(_ sender: Any) {
+        loginWithGoogle()
+    }
+    func loginWithGoogle(){
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().signIn()
+    }
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+        if error == nil && user != nil{
+            if let profile = user!.profile{
+                if let email = profile.email, email.count > 0{
+                    User.shared().userEmailId = email
+                }
+                if let name = profile.name, name.count > 0{
+                    User.shared().userFirstName = name
+                }
+                if let imageURL = profile.imageURL(withDimension: 200){
+                    DispatchQueue.global(qos: DispatchQoS.QoSClass.background).async {
+                        let dataImageGI = NSData.init(contentsOf: imageURL)
+                        let image = UIImage.init(data: dataImageGI! as Data)
+                        User.shared().userImage = image
+                        User.shared().userLoginFrom = "Google"
+                        self.getUser()
+                    }
+                }
+            }
+        }
+    }
+    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+    }
     
     func getUser() {
         print(User.shared().userEmailId,User.shared().userFirstName,User.shared().userImage, User.shared().userLoginFrom)
     }
+    
+    
+    
+    
+    
     
     
     

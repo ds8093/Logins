@@ -8,6 +8,7 @@ target 'Logins' do
   # Pods for Logins
 
     pod 'FBSDKLoginKit'
+    pod 'GoogleSignIn'
 
 
 
